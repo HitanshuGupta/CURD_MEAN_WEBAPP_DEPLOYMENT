@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    restart: always
+
+  backend:
+    build: ./backend
+    restart: always
+    ports:
+      - "8080:8080" # Optional: Exposing in case I need direct access for testing
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    volumes:
+      - mongo-data:/data/db
+    restart: always
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    restart: always
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  mongo-data:
