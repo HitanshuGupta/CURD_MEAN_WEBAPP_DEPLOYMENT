@@ -19,7 +19,7 @@ The application is deployed as a set of microservices on a single Docker host.
 
 * **Frontend**: Angular application served via Nginx (Port 80).
 
-* **Backend**: Node.js/Express API (Port 5000).
+* **Backend**: Node.js/Express API (Port 8080).
 
 * **Database**: MongoDB container (Port 27017).
 
