@@ -143,8 +143,8 @@ Connect to your instance via SSH and run:
 
 ```bash
 # Update and install Docker
-sudo apt-get update
-sudo apt-get install -y docker.io docker-compose-plugin
+sudo yum update
+sudo yum install -y docker.io docker-compose-plugin
 
 # Add ubuntu user to docker group (avoids using sudo for docker commands)
 sudo usermod -aG docker ubuntu
