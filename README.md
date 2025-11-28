@@ -185,10 +185,12 @@ Every time code is pushed to the `main` branch, the pipeline will:
 ### 1\. CI/CD Execution
 
 *Screenshot of the GitHub Actions tab showing a successful "Build and Deploy" workflow run.*
+![alt text](image-3.png)
 
 ### 2\. Docker Hub Images
 
 *Screenshot of Docker Hub showing the pushed repositories (backend, frontend, nginx).*
+![alt text](image-1.png)
 
 ### 3\. Application Deployment
 
@@ -198,6 +200,7 @@ Every time code is pushed to the `main` branch, the pipeline will:
 ### 4\. Nginx & Infrastructure
 
 *Screenshot of the terminal showing `docker ps` running on the EC2 instance.*
+![alt text](image-2.png)
 
 ## 🛠️ Troubleshooting
 
