@@ -195,9 +195,13 @@ Every time code is pushed to the `main` branch, the pipeline will:
 ### 3\. Application Deployment
 
 *Screenshot of the browser accessing the application via the EC2 Public IP.*
-![alt text](image.png)
+![alt text](image-4.png)
+
 
 ### 4\. Nginx & Infrastructure
+
+*Screenshot of the running EC2 instance in aws console.*
+![alt text](image.png)
 
 *Screenshot of the terminal showing `docker ps` running on the EC2 instance.*
 ![alt text](image-2.png)
