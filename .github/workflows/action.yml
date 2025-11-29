@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ "main" ]
-    paths-ignore:          # OPTIMIZATION 1: Don't run on README changes
+    paths-ignore:
       - '**.md'
       - '.gitignore'
       - 'docs/**'
@@ -15,7 +15,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # OPTIMIZATION 2: Set up Docker Buildx for Caching
+      # 1. Setup Docker Buildx for Caching
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -25,16 +25,17 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # OPTIMIZATION 3: Cache Layers
+      # 2. Build & Push Backend (With Caching)
       - name: Build and Push Backend
         uses: docker/build-push-action@v4
         with:
           context: ./backend
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/mean-backend:latest
-          cache-from: type=gha # Load cache from GitHub Actions
-          cache-to: type=gha,mode=max # Save cache to GitHub Actions
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
+      # 3. Build & Push Frontend (With Caching)
       - name: Build and Push Frontend
         uses: docker/build-push-action@v4
         with:
@@ -44,6 +45,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # 4. Build & Push Nginx (With Caching)
       - name: Build and Push Nginx
         uses: docker/build-push-action@v4
         with:
@@ -53,6 +55,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # 5. Deploy to EC2 (Restored the file generation step)
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
@@ -60,7 +63,42 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Only pull the images that actually changed
+            # Create app directory if not exists
+            mkdir -p app
+            cd app
+            
+            # 1. Stop existing containers (Optional, but safe)
+            # sudo docker compose down || true
+            
+            # 2. GENERATE DOCKER-COMPOSE FILE (This was missing!)
+            cat <<EOF > docker-compose.yml
+            version: '3.8'
+            services:
+              frontend:
+                image: ${{ secrets.DOCKER_USERNAME }}/mean-frontend:latest
+                restart: always
+              backend:
+                image: ${{ secrets.DOCKER_USERNAME }}/mean-backend:latest
+                depends_on:
+                  - mongo
+                restart: always
+              mongo:
+                image: mongo:latest
+                volumes:
+                  - mongo-data:/data/db
+                restart: always
+              nginx:
+                image: ${{ secrets.DOCKER_USERNAME }}/mean-nginx:latest
+                ports:
+                  - "80:80"
+                restart: always
+                depends_on:
+                  - frontend
+                  - backend
+            volumes:
+              mongo-data:
+            EOF
+
+            # 3. Pull and Start
             sudo docker compose pull
-            # 'up -d' will only recreate containers that have changed images
             sudo docker compose up -d
