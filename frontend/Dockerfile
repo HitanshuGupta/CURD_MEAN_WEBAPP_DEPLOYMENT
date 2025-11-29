@@ -10,6 +10,12 @@ RUN npm run build --prod
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
 
+# 1. Remove the default Nginx configuration
+RUN rm /etc/nginx/conf.d/default.conf
+
+# 2. Copy YOUR custom configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 COPY --from=build /app/dist/angular-15-crud /usr/share/nginx/html
 
 # Expose internal port

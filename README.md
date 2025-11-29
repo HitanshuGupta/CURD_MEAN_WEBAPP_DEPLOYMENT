@@ -196,6 +196,7 @@ Every time code is pushed to the `main` branch, the pipeline will:
 
 *Screenshot of the browser accessing the application via the EC2 Public IP.*
 ![alt text](image-4.png)
+![alt text](image-5.png)
 
 
 ### 4\. Nginx & Infrastructure
