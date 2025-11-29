@@ -222,18 +222,18 @@ Every time code is pushed to the `main` branch, the pipeline will:
 **I've encounter issues during deployment, check these common fixes we identified:**
 
 ### 1\. Browser Error: net::ERR_CONNECTION_REFUSED (on localhost:8080)
-Issue: The Angular app tries to connect to localhost:8080 for API calls. This fails in production because the API is on a remote server, not the user's computer.
+**Issue:** The Angular app tries to connect to `localhost:8080` for API calls. This fails in production because the API is on a remote server, not the user's computer.
 
-Fix: Update src/app/services/tutorial.service.ts. Change the baseUrl from http://localhost:8080/api/... to a relative path: /api/.... This forces the browser to use the current domain (handled by Nginx).
+**Fix:** Update `/frontend/src/app/services/tutorial.service.ts`. Change the baseUrl from `http://localhost:8080/api/...` to a relative path: `/api/tutorials....` This forces the browser to use the current domain (handled by Nginx).
 
 ### 2\. 404 Not Found When Refreshing Page
-Issue: Navigating to http://<ip>/tutorials works via buttons, but refreshing the page gives a "404 Not Found Nginx" error. This is a Single Page Application (SPA) routing issue.
+**Issue:** Navigating to `http://<ip>/tutorials` works via buttons, but refreshing the page gives a "404 Not Found Nginx" error. This is a Single Page Application (SPA) routing issue.
 
-Fix: You must add a custom nginx.conf to the Frontend container that includes try_files $uri $uri/ /index.html;. This redirects unknown routes back to Angular so it can handle them.
+**Fix:** You must add a custom nginx.conf to the Frontend container that includes `try_files $uri $uri/ /index.html;`. This redirects unknown routes back to Angular so it can handle them.
 
 ### 3\. Pipeline Error: docker: 'compose' is not a docker command
-Issue: Amazon Linux installs the Docker Engine but often excludes the Docker Compose V2 plugin by default.
+**Issue:** Amazon Linux installs the Docker Engine but often excludes the Docker Compose V2 plugin by default.
 
-Fix: Manually install the plugin to /usr/local/lib/docker/cli-plugins/ (as shown in the Installation section) so that sudo docker compose works globally.
+**Fix:** Manually install the plugin to `/usr/local/lib/docker/cli-plugins/` (as shown in the Installation section) so that sudo docker compose works globally.
 
 
