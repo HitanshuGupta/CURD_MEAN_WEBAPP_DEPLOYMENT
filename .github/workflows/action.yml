@@ -55,7 +55,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 5. Deploy to EC2 (Restored the file generation step)
+      # 5. Deploy to EC2 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
@@ -70,7 +70,7 @@ jobs:
             # 1. Stop existing containers (Optional, but safe)
             # sudo docker compose down || true
             
-            # 2. GENERATE DOCKER-COMPOSE FILE (This was missing!)
+            # 2. GENERATE DOCKER-COMPOSE FILE
             cat <<EOF > docker-compose.yml
             version: '3.8'
             services:
