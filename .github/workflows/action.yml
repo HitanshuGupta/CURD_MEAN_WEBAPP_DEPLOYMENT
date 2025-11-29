@@ -2,7 +2,11 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
+    paths-ignore:          # OPTIMIZATION 1: Don't run on README changes
+      - '**.md'
+      - '.gitignore'
+      - 'docs/**'
 
 jobs:
   build-and-deploy:
@@ -11,26 +15,43 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      # OPTIMIZATION 2: Set up Docker Buildx for Caching
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      # OPTIMIZATION 3: Cache Layers
       - name: Build and Push Backend
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/mean-backend:latest ./backend
-          docker push ${{ secrets.DOCKER_USERNAME }}/mean-backend:latest
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/mean-backend:latest
+          cache-from: type=gha # Load cache from GitHub Actions
+          cache-to: type=gha,mode=max # Save cache to GitHub Actions
 
       - name: Build and Push Frontend
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/mean-frontend:latest ./frontend
-          docker push ${{ secrets.DOCKER_USERNAME }}/mean-frontend:latest
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/mean-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build and Push Nginx
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/mean-nginx:latest ./nginx
-          docker push ${{ secrets.DOCKER_USERNAME }}/mean-nginx:latest
+        uses: docker/build-push-action@v4
+        with:
+          context: ./nginx
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/mean-nginx:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
@@ -39,42 +60,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Create app directory if not exists
-            mkdir -p app
-            cd app
-            
-            # Stop existing containers
-            sudo docker compose down || true
-            
-            # Create docker-compose.yml on server (or git pull if you prefer)
-            cat <<EOF > docker-compose.yml
-            version: '3.8'
-            services:
-              frontend:
-                image: ${{ secrets.DOCKER_USERNAME }}/mean-frontend:latest
-                restart: always
-              backend:
-                image: ${{ secrets.DOCKER_USERNAME }}/mean-backend:latest
-                depends_on:
-                  - mongo
-                restart: always
-              mongo:
-                image: mongo:latest
-                volumes:
-                  - mongo-data:/data/db
-                restart: always
-              nginx:
-                image: ${{ secrets.DOCKER_USERNAME }}/mean-nginx:latest
-                ports:
-                  - "80:80"
-                restart: always
-                depends_on:
-                  - frontend
-                  - backend
-            volumes:
-              mongo-data:
-            EOF
-
-            # Pull and Start
+            # Only pull the images that actually changed
             sudo docker compose pull
+            # 'up -d' will only recreate containers that have changed images
             sudo docker compose up -d
